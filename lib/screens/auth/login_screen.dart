@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Access your event notifications and stay updated with the latest on campus.',
+                      'Sign in to access your personalized campus events feed.',
                       style: AppTextStyles.bodyMuted.copyWith(
                         color: AppColors.logisticsNavy,
                       ),
@@ -105,12 +105,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppColors.cardWhite,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: const [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Color(0x0F000000),
                         blurRadius: 24,
-                        offset: const Offset(0, 12),
+                        offset: Offset(0, 12),
                       ),
                     ],
                   ),
@@ -132,8 +132,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         validator: _validateEmail,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: const InputDecoration(
-                          hintText: 'Enter your email',
+                          hintText: 'student@domain',
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
                       ),
@@ -142,14 +143,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         validator: _validatePassword,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: InputDecoration(
                           hintText: 'Enter your password',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
                               color: AppColors.mutedOperationalInk,
                             ),
                             onPressed: () {
@@ -165,12 +165,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // TODO: Implement forgot password
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Password reset not implemented yet')),
+                            );
                           },
                           child: Text(
                             'Forgot Password?',
                             style: AppTextStyles.label.copyWith(
-                              color: AppColors.logisticsNavy,
+                              color: AppColors.commandBlue,
                             ),
                           ),
                         ),
@@ -180,9 +182,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.logisticsNavy,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(24),
                           ),
                         ),
                         onPressed: _handleLogin,
@@ -203,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               'Sign Up',
                               style: AppTextStyles.body.copyWith(
-                                color: AppColors.logisticsNavy,
+                                color: AppColors.commandBlue,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

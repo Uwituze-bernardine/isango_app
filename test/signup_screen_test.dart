@@ -21,7 +21,7 @@ void main() {
     testWidgets('shows required-field validation errors', (tester) async {
       await tester.pumpWidget(testWidget);
 
-      final createButton = find.text('Create account');
+      final createButton = find.widgetWithText(ElevatedButton, 'Create Account');
       expect(createButton, findsOneWidget);
 
       await tester.ensureVisible(createButton);
@@ -42,7 +42,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(2), 'password123');
       await tester.enterText(find.byType(TextFormField).at(3), 'password321');
 
-      await tester.tap(find.text('Create account'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
       await tester.pump();
 
       expect(find.text('Passwords do not match'), findsOneWidget);

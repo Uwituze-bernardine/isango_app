@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:isango_app/core/constants/app_routes.dart';
 import 'package:isango_app/core/theme/app_colors.dart';
+import 'package:isango_app/core/theme/app_radii.dart';
 import 'package:isango_app/core/theme/app_spacing.dart';
 import 'package:isango_app/core/theme/app_text_styles.dart';
 
@@ -82,7 +83,8 @@ class _SignupScreenState extends State<SignupScreen> {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    final success = _emailController.text.trim() != 'error@example.com';
+    final emailText = _emailController.text.trim();
+    final success = emailText != 'error@example.com';
     if (!success) {
       setState(() {
         _submissionError = 'Unable to create account. Please try again.';
@@ -95,25 +97,24 @@ class _SignupScreenState extends State<SignupScreen> {
       _isCreatingAccount = false;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Account created. Check your email to verify.'),
-      ),
-    );
+    Navigator.of(context).pushReplacementNamed(AppRoutes.verifyEmail);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final inputDecoration = theme.inputDecorationTheme;
-
     return Scaffold(
       backgroundColor: AppColors.mistBackground,
       appBar: AppBar(
         backgroundColor: AppColors.mistBackground,
         elevation: 0,
         foregroundColor: AppColors.logisticsNavy,
-        leading: BackButton(color: AppColors.logisticsNavy),
+        leading: const BackButton(color: AppColors.logisticsNavy),
+        title: Text(
+          'Create Account',
+          style: AppTextStyles.headline.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -125,115 +126,107 @@ class _SignupScreenState extends State<SignupScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Create your account',
-                style: AppTextStyles.display.copyWith(
-                  color: AppColors.logisticsNavy,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                'Sign up to access verified campus event listings and stay connected.',
+                'Join your campus community to never miss an event.',
                 style: AppTextStyles.bodyMuted,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
-              Form(
-                key: _formKey,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.cardWhite,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 24,
-                        offset: const Offset(0, 12),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.cardWhite,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0F000000),
+                      blurRadius: 24,
+                      offset: Offset(0, 12),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Form(
+                  key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'Account details',
-                        style: AppTextStyles.headline,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'A verification email will follow after account creation.',
-                        style: AppTextStyles.bodyMuted,
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      TextFormField(
-                        controller: _nameController,
-                        keyboardType: TextInputType.name,
-                        textInputAction: TextInputAction.next,
-                        validator: _validateName,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                        decoration: InputDecoration(
-                          hintText: 'Full name',
-                          prefixIcon: const Icon(Icons.person_outline),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        validator: _validateEmail,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                        decoration: InputDecoration(
-                          hintText: 'Email',
-                          prefixIcon: const Icon(Icons.email_outlined),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.next,
-                        validator: _validatePassword,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                        decoration: InputDecoration(
-                          hintText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: AppColors.mutedOperationalInk,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
+                      _buildLabeledField(
+                        label: 'Full Name',
+                        child: TextFormField(
+                          controller: _nameController,
+                          keyboardType: TextInputType.name,
+                          textInputAction: TextInputAction.next,
+                          validator: _validateName,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          decoration: _baseInputDecoration(
+                            hintText: 'John Doe',
+                            prefixIcon: const Icon(Icons.person_outline),
                           ),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      TextFormField(
-                        controller: _confirmPasswordController,
-                        obscureText: _obscureConfirmPassword,
-                        textInputAction: TextInputAction.done,
-                        validator: _validateConfirmPassword,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                        decoration: InputDecoration(
-                          hintText: 'Confirm password',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureConfirmPassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: AppColors.mutedOperationalInk,
+                      _buildLabeledField(
+                        label: 'University Email',
+                        child: TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          validator: _validateEmail,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          decoration: _baseInputDecoration(
+                            hintText: 'student@domain',
+                            prefixIcon: const Icon(Icons.email_outlined),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildLabeledField(
+                        label: 'Password',
+                        child: TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.next,
+                          validator: _validatePassword,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          decoration: _baseInputDecoration(
+                            hintText: 'Create a password',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                color: AppColors.mutedOperationalInk,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
-                              });
-                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildLabeledField(
+                        label: 'Confirm Password',
+                        child: TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: _obscureConfirmPassword,
+                          textInputAction: TextInputAction.done,
+                          validator: _validateConfirmPassword,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          decoration: _baseInputDecoration(
+                            hintText: 'Confirm password',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                                color: AppColors.mutedOperationalInk,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                                });
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -243,60 +236,129 @@ class _SignupScreenState extends State<SignupScreen> {
                           _submissionError!,
                           style: AppTextStyles.body.copyWith(
                             color: AppColors.safetyOrange,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
-                      const SizedBox(height: AppSpacing.lg),
-                      ElevatedButton(
-                        onPressed: _isCreatingAccount ? null : _createAccount,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.logisticsNavy,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: _isCreatingAccount
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Create account'),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Already have an account? ',
-                            style: AppTextStyles.body,
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pushReplacementNamed(AppRoutes.login);
-                            },
-                            child: Text(
-                              'Sign In',
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.commandBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(height: AppSpacing.lg),
+              ElevatedButton(
+                onPressed: _isCreatingAccount ? null : _createAccount,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.logisticsNavy,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadii.button),
+                  ),
+                ),
+                child: _isCreatingAccount
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Text('Create Account'),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward, size: 20),
+                        ],
+                      ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'We will send you a verification link to your email after you sign up.',
+                style: AppTextStyles.bodyMuted,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Already have an account? ',
+                    style: AppTextStyles.body,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+                    },
+                    child: Text(
+                      'Sign In',
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.commandBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLabeledField({required String label, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.title.copyWith(
+            color: AppColors.nearBlackInk,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        child,
+      ],
+    );
+  }
+
+  InputDecoration _baseInputDecoration({
+    required String hintText,
+    required Icon prefixIcon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      filled: true,
+      fillColor: const Color(0xFFF6F8FF),
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.lg,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadii.input),
+        borderSide: BorderSide(color: AppColors.softBorder),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadii.input),
+        borderSide: BorderSide(color: AppColors.softBorder),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadii.input),
+        borderSide: BorderSide(color: AppColors.commandBlue, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadii.input),
+        borderSide: BorderSide(color: AppColors.criticalRed, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadii.input),
+        borderSide: BorderSide(color: AppColors.criticalRed, width: 1.5),
       ),
     );
   }

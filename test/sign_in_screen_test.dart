@@ -37,11 +37,12 @@ void main() {
     testWidgets('navigates to /signup when sign up link is tapped', (tester) async {
       await tester.pumpWidget(testWidget);
 
-      // Find the sign up link
-      final signUpLink = find.text('Don\'t have an account? Sign Up');
+      // Find the sign up link text
+      final signUpLink = find.widgetWithText(GestureDetector, 'Sign Up');
       expect(signUpLink, findsOneWidget);
 
       // Tap the link
+      await tester.ensureVisible(signUpLink);
       await tester.tap(signUpLink);
       await tester.pumpAndSettle();
 
