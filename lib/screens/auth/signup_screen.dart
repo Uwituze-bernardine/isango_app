@@ -17,9 +17,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isCreatingAccount = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _agreedToTerms = false;
+  String? _submissionError;
 
   @override
   void dispose() {
@@ -31,21 +32,21 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   String? _validateName(String? value) {
-    if (value == null || value.isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return 'Name is required';
     }
-    if (value.length < 2) {
+    if (value.trim().length < 2) {
       return 'Name must be at least 2 characters';
     }
     return null;
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return 'Email is required';
     }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-      return 'Please enter a valid email';
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value.trim())) {
+      return 'Enter a valid email';
     }
     return null;
   }
@@ -62,7 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
+      return 'Confirm your password';
     }
     if (value != _passwordController.text) {
       return 'Passwords do not match';
@@ -70,29 +71,50 @@ class _SignupScreenState extends State<SignupScreen> {
     return null;
   }
 
-  void _handleSignup() {
-    if (_formKey.currentState!.validate()) {
-      if (!_agreedToTerms) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You must agree to the terms and conditions'),
-          ),
-        );
-        return;
-      }
-      // TODO: Implement actual registration logic
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Creating account...')),
-      );
-      // Navigate to verification or login
-      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+  Future<void> _createAccount() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isCreatingAccount = true;
+      _submissionError = null;
+    });
+
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    final success = _emailController.text.trim() != 'error@example.com';
+    if (!success) {
+      setState(() {
+        _submissionError = 'Unable to create account. Please try again.';
+        _isCreatingAccount = false;
+      });
+      return;
     }
+
+    setState(() {
+      _isCreatingAccount = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Account created. Check your email to verify.'),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final inputDecoration = theme.inputDecorationTheme;
+
     return Scaffold(
       backgroundColor: AppColors.mistBackground,
+      appBar: AppBar(
+        backgroundColor: AppColors.mistBackground,
+        elevation: 0,
+        foregroundColor: AppColors.logisticsNavy,
+        leading: BackButton(color: AppColors.logisticsNavy),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(
@@ -102,36 +124,16 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: AppColors.paleSignalBlue,
-                  borderRadius: BorderRadius.circular(24),
+              Text(
+                'Create your account',
+                style: AppTextStyles.display.copyWith(
+                  color: AppColors.logisticsNavy,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.person_add_alt_1,
-                      size: 40,
-                      color: AppColors.logisticsNavy,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Text(
-                      'Create your account',
-                      style: AppTextStyles.display.copyWith(
-                        color: AppColors.logisticsNavy,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Register now to receive campus event alerts, updates, and announcements.',
-                      style: AppTextStyles.bodyMuted.copyWith(
-                        color: AppColors.logisticsNavy,
-                      ),
-                    ),
-                  ],
-                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Sign up to access verified campus event listings and stay connected.',
+                style: AppTextStyles.bodyMuted,
               ),
               const SizedBox(height: AppSpacing.xl),
               Form(
@@ -153,41 +155,47 @@ class _SignupScreenState extends State<SignupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Sign up',
+                        'Account details',
                         style: AppTextStyles.headline,
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        'Create a secure account to begin using Isango.',
+                        'A verification email will follow after account creation.',
                         style: AppTextStyles.bodyMuted,
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       TextFormField(
                         controller: _nameController,
                         keyboardType: TextInputType.name,
+                        textInputAction: TextInputAction.next,
                         validator: _validateName,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your full name',
-                          prefixIcon: Icon(Icons.person_outline),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        decoration: InputDecoration(
+                          hintText: 'Full name',
+                          prefixIcon: const Icon(Icons.person_outline),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
                         validator: _validateEmail,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your email',
-                          prefixIcon: Icon(Icons.email_outlined),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        decoration: InputDecoration(
+                          hintText: 'Email',
+                          prefixIcon: const Icon(Icons.email_outlined),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.next,
                         validator: _validatePassword,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: InputDecoration(
-                          hintText: 'Create a password',
+                          hintText: 'Password',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -208,9 +216,11 @@ class _SignupScreenState extends State<SignupScreen> {
                       TextFormField(
                         controller: _confirmPasswordController,
                         obscureText: _obscureConfirmPassword,
+                        textInputAction: TextInputAction.done,
                         validator: _validateConfirmPassword,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: InputDecoration(
-                          hintText: 'Confirm your password',
+                          hintText: 'Confirm password',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -227,34 +237,18 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-                      CheckboxListTile(
-                        value: _agreedToTerms,
-                        onChanged: (value) {
-                          setState(() {
-                            _agreedToTerms = value ?? false;
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text.rich(
-                          TextSpan(
-                            text: 'I agree to the ',
-                            style: AppTextStyles.body,
-                            children: [
-                              TextSpan(
-                                text: 'Terms & Conditions',
-                                style: AppTextStyles.body.copyWith(
-                                  color: AppColors.logisticsNavy,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ],
+                      if (_submissionError != null) ...[
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          _submissionError!,
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.safetyOrange,
                           ),
                         ),
-                      ),
+                      ],
                       const SizedBox(height: AppSpacing.lg),
                       ElevatedButton(
+                        onPressed: _isCreatingAccount ? null : _createAccount,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.logisticsNavy,
                           foregroundColor: Colors.white,
@@ -263,8 +257,16 @@ class _SignupScreenState extends State<SignupScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        onPressed: _handleSignup,
-                        child: const Text('Sign Up'),
+                        child: _isCreatingAccount
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Create account'),
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       Row(
@@ -281,7 +283,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             child: Text(
                               'Sign In',
                               style: AppTextStyles.body.copyWith(
-                                color: AppColors.logisticsNavy,
+                                color: AppColors.commandBlue,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
